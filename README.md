@@ -1,62 +1,98 @@
 # Normative Cranial Growth
 This is a repository for the [Data-driven Normative Reference of Pediatric Cranial Bone Development](https://github.com/cuMIP/normativeCranialGrowth).
-This repository contains the normative intensity (``IntensityModel``), thickness (``ThicknessModel``), and shape (``ShapeModel``) models described in the manuscript. This repository also provides the example scripts to generate cranial bone surface meshes based on age, sex, and standard deviation to the average principal component coefficients. The Excels files  average
 
+This repository contains the normative intensity (``IntensityModel``), thickness (``ThicknessModel``), and shape (``ShapeModel``) models described in the manuscript. 
 
-![Network diagram as found in published manuscript](/ModelArchitecture.jpg)
+This repository also provides the example scripts to generate cranial bone surface meshes based on age, sex, and standard deviation to the average PCA coefficients. 
+
+The Excels files contains the average evolution of bone thickness (``BoneThickness.csv``), cephalic index (``CI.csv``), intracranial volume (``ICV.csv``), and bone surface areas (``SurfaceArea.csv``) for males and females, respectively.
+
 
 ## Dependencies:
 - [Python](python.org)
-- [Pytorch](https://pytorch.org/get-started/locally)
 - [NumPy](https://numpy.org/install/)
 - [SimpleITK](https://simpleitk.org/)
 - [VTK](https://pypi.org/project/vtk/)
-- [scipy](https://scipy.org/)
-- [skimage](https://scikit-image.org/)
-- [TorchIO](https://torchio.readthedocs.io/)
 
     *Once Python is installed, each of these packages can be downloaded using [Python pip](https://pip.pypa.io/en/stable/installation/)*
 
 
 ## Using the code
-Due to data privacy agreements, we are not able to share any example CT Image. Our example inference codes are based on the data processing script to generate masked normalzied CT images based on MHA graphic data files (.mha). If you are not using the same data format for the CT images, you could generate input array based on your own choice. Our model requires input image arrays with size of 96x96x96 and intensity normalized to the range of 0-1.
 
 ### Quick summary
-**Input**: MHA graphic files.
+**Input**: age (in years); sex (binary indicator for male); nStdThickness, nStdIntensity, and nStdShape (arrays where elements represent the number of standard deviations to each of the average PCA coefficient).
 
-**Output**: MHA graphic files labeling 5 cranial bone, and VTK PolyData containing 4 landmarks at the cranial base.
+**Output**: VTK PolyData for the external and internal cranial surface, with information of local bone thickness and density.
 
 ### Code example
-An example for automatic concurrent cranial bone labeling and landmark localization is:
+An example for generating cranial surface instance based on age, sex, and std to the average PCA coefficient is:
 ```python
-import DataProcessing
+import Tools
+import pickle
 import SimpleITK as sitk
-import ModelConfiguration
+import vtk
+import numpy as np
+import os
 
-### process example CT image
+inputPath = './'
+## import Model data
+with open(os.path.join(inputPath, 'ThicknessModel'), "rb") as fp:
+    ThicknessModel = pickle.load(fp)
 
-ctImage = sitk.ReadImage('./ExampleCTImage.mha')
-binaryImage = DataProcessing.CreateBoneMask(ctImage)
-ctImage = DataProcessing.ResampleAndMaskImage(ctImage, binaryImage)
+with open(os.path.join(inputPath, 'IntensityModel'), "rb") as fp:
+    IntensityModel = pickle.load(fp)
 
-### model
-modelPath = './MiccaiFinalModel.dat'
-device = ModelConfiguration.getDevice()
-model = ModelConfiguration.adaptModel(modelPath, device)
-imageData = ModelConfiguration.adaptData(ctImage, device)
+with open(os.path.join(inputPath, 'ShapeModel'), "rb") as fp:
+    ShapeModel = pickle.load(fp)
 
-landmarks, boneLabels = ModelConfiguration.runModel(model, ctImage, binaryImage, imageData)
+## target age and sex, and standard deviations from average principal components
+age = 1 ## age in years
+sex = 0 # 1 for male, 0 for female 
+nStdThickness = np.zeros(ThicknessModel[2].shape[0])
+nStdIntensity = np.zeros(IntensityModel[2].shape[0])
+nStdShape = np.zeros(ShapeModel[2].shape[0])
+## + 1 std away for the second component
+nStdThickness[1] = 1
+nStdIntensity[1] = 1
+nStdShape[1] = 1
 
+## Read mask image and average bone segmentation image
+MaskImage = sitk.ReadImage(os.path.join(inputPath, 'SphericalMaskImage.mha'))
+AverageSegmentationImage = sitk.ReadImage(os.path.join(inputPath, 'averageBoneSegmentationSphericalImage.mha'))
+
+## Constructing average spherical maps with standard deviation 1 for shape, thickness and intensity
+
+CoordinateMap = Tools.ConstrucPredictionSphericalMapsFromPCAModel(ShapeModel, age, sex, MaskImage = MaskImage, nStd = nStdShape, Coordinates=True)
+CoordinateMap.CopyInformation(AverageSegmentationImage)
+ThicknessMap = Tools.ConstrucPredictionSphericalMapsFromPCAModel(ThicknessModel, age, sex, MaskImage = MaskImage, nStd = nStdThickness, Coordinates=False)
+IntensityMap = Tools.ConstrucPredictionSphericalMapsFromPCAModel(IntensityModel, age, sex, MaskImage = MaskImage, nStd = nStdIntensity, Coordinates=False)
+
+## Construct external cranial surface mesh with thickness and intensity information
+referneceImage = MaskImage
+referneceImage.CopyInformation(AverageSegmentationImage)
+ExternalSurface = Tools.ConstructCranialSurfaceMeshFromSphericalMaps(CoordinateMap, referenceImage=referneceImage,
+    intensityImageDict={'Density':IntensityMap, 'Thickness': ThicknessMap, 'BoneLabel': AverageSegmentationImage}, subsamplingFactor=1,verbose=True)
+
+## Create internal cranial surface mesh with external surface and thickness map
+InternalSurface = Tools.CreateInternalSurfaceFromExternalSurface(MaskImage, ExternalSurface=ExternalSurface)
+
+## save the meshes
+writer = vtk.vtkXMLPolyDataWriter()
+writer.SetInputData(ExternalSurface)
+writer.SetFileName(os.path.join(inputPath, 'ExternalSurface.vtp'))
+writer.Update()
+
+writer = vtk.vtkXMLPolyDataWriter()
+writer.SetInputData(InternalSurface)
+writer.SetFileName(os.path.join(inputPath, 'InternalSurface.vtp'))
+writer.Update()
 ```
 *When using this code, be sure to assign corret path containing a valid MHA graphic file of a CT image to the ```ctImage```.*
 
 ### The workflow
 
-- The **CreateBoneMask** function creates a binary mask for the CT image.
-- The **ResampleAndMaskImage** function resamples and masks the CT image to the correct size and normalizes the intensity.
-- The **getDevice** function specifies the device for the torch model.
-- The **getDevice** function specifies the device for the torch model.
-- The **adaptModel** and **adaptData** functions prepares the model and data for inference.
-- The **runModel** function generates landmark and bone labeling predictions and resample them to the original CT image space.
+- The **ConstrucPredictionSphericalMapsFromPCAModel** function creates predicted 2D spherical maps based on age, sex, and std to the average PCA coefficients.
+- The **ConstructCranialSurfaceMeshFromSphericalMaps** function constructs the 3D VTP PolyData of the external cranial surface mesh based ont the 2D speherical maps.
+- The **CreateInternalSurfaceFromExternalSurface** function creates the internal surface mesh based on external surface and the predicted local thicknes.
 
 If you have any questions, please email Jiawei Liu at jiawei.liu@cuanschutz.edu
