@@ -25,7 +25,7 @@ The Excels files contains the model-generated average temporal development of bo
 **Output**: VTK PolyData for the external and internal cranial surface, with information of local bone thickness and density.
 
 ### Code example
-An example for generating cranial surface instance based on age, sex, and std to the average PCA coefficient is:
+Following is an example for generating an cranial surface instance for a female with 1 year of age, and +1 std to the second PCA coefficient for all three metrics:
 ```python
 import Tools
 import pickle
