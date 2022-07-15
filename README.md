@@ -3,7 +3,7 @@ This is a repository for the [Data-driven Normative Reference of Pediatric Crani
 
 This repository contains the normative intensity (``IntensityModel``), thickness (``ThicknessModel``), and shape (``ShapeModel``) models described in the manuscript. 
 
-This repository also provides the example scripts to generate cranial bone surface meshes based on age, sex, and standard deviation to the average PCA coefficients. 
+This repository also provides the example scripts to generate cranial bone surface meshes based on age, sex, and number of standard deviations to the average PCA coefficients. 
 
 The Excels files contains the average evolution of bone thickness (``BoneThickness.csv``), cephalic index (``CI.csv``), intracranial volume (``ICV.csv``), and bone surface areas (``SurfaceArea.csv``) for males and females, respectively.
 
