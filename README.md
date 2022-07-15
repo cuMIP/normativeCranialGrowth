@@ -5,7 +5,7 @@ This repository contains the normative intensity (``IntensityModel``), thickness
 
 This repository also provides example scripts to generate synthetic normative cranial bone surface meshes based on age, sex, and number of the number of standard deviations away from the the average PCA coefficients. 
 
-The Excels files contains the model-generated average temporal development of bone thickness (``BoneThickness.csv``), cephalic index (``CI.csv``), intracranial volume (``ICV.csv``), and bone surface areas (``SurfaceArea.csv``) for males and females, respectively.
+The refenceMetrics contains Excels files that present the model-generated average temporal development of bone thickness (``BoneThickness.csv``), cephalic index (``CI.csv``), intracranial volume (``ICV.csv``), and bone surface areas (``SurfaceArea.csv``) for males and females, respectively.
 
 
 ## Dependencies:
