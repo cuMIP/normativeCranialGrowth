@@ -20,7 +20,7 @@ The Excels files contains the model-generated average temporal development of bo
 ## Using the code
 
 ### Quick summary
-**Input**: age (in years); sex (binary indicator for male); nStdThickness, nStdIntensity, and nStdShape (arrays where elements represent the number of standard deviations to each of the average PCA coefficient).
+**Input**: age (in years); sex (binary indicator for male); nStdThickness, nStdIntensity, and nStdShape (arrays where elements represent the number of standard deviations away from the average PCA coefficients).
 
 **Output**: VTK PolyData for the external and internal cranial surface, with information of local bone thickness and density.
 
