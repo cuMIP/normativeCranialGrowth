@@ -87,7 +87,7 @@ writer.SetInputData(InternalSurface)
 writer.SetFileName(os.path.join(inputPath, 'InternalSurface.vtp'))
 writer.Update()
 ```
-*When using this code, be sure to assign corret path containing a valid MHA graphic file of a CT image to the ```ctImage```.*
+*When using this code, be sure not to modify ```SphericalMaskImage.mha``` and ```averageBoneSegmentationSphericalImage.mha```, as they define the area of interest for the model and store necessary information for the generation of images and meshes.*
 
 ### The workflow
 
