@@ -25,7 +25,7 @@ The refenceMetrics contains Excels files that present the model-generated averag
 **Output**: VTK PolyData for the external and internal cranial surface, with information of local bone thickness and density.
 
 ### Code example
-Following is an example for generating an cranial surface instance for a female with 1 year of age, and +1 std to the second PCA coefficient for all three metrics:
+Following is an example for generating a cranial surface instance for a female with 1 year of age, and +1 std to the second PCA coefficient for all three metrics:
 ```python
 import Tools
 import pickle
