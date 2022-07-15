@@ -5,7 +5,7 @@ import vtk
 import numpy as np
 import os
 
-inputPath = r'C:\Users\liuji\OneDrive - The University of Colorado Denver\ReferenceModel'
+inputPath = './'
 ## import Model data
 with open(os.path.join(inputPath, 'ThicknessModel'), "rb") as fp:
     ThicknessModel = pickle.load(fp)
@@ -17,15 +17,15 @@ with open(os.path.join(inputPath, 'ShapeModel'), "rb") as fp:
     ShapeModel = pickle.load(fp)
 
 ## target age and sex, and standard deviations from average principal components
-age = 9 ## age in years
+age = 1 ## age in years
 sex = 0 # 1 for male, 0 for female 
 nStdThickness = np.zeros(ThicknessModel[2].shape[0])
 nStdIntensity = np.zeros(IntensityModel[2].shape[0])
 nStdShape = np.zeros(ShapeModel[2].shape[0])
-## + 2 std away for the second component
-nStdThickness[1] = 2
-nStdIntensity[1] = 2
-nStdShape[1] = 2
+## + 1 std away for the second component
+nStdThickness[1] = 1
+nStdIntensity[1] = 1
+nStdShape[1] = 1
 
 ## Read mask image and average bone segmentation image
 MaskImage = sitk.ReadImage(os.path.join(inputPath, 'SphericalMaskImage.mha'))
