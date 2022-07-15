@@ -44,7 +44,7 @@ referneceImage.CopyInformation(AverageSegmentationImage)
 ExternalSurface = Tools.ConstructCranialSurfaceMeshFromSphericalMaps(CoordinateMap, referenceImage=referneceImage,
     intensityImageDict={'Density':IntensityMap, 'Thickness': ThicknessMap, 'BoneLabel': AverageSegmentationImage}, subsamplingFactor=1,verbose=True)
 
-## Create internal cranial surface mesh with external surface and thickness map
+## Create internal cranial surface mesh from the external surface and thickness map
 InternalSurface = Tools.CreateInternalSurfaceFromExternalSurface(MaskImage, ExternalSurface=ExternalSurface)
 
 ## save the meshes
